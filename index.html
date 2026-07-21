@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentryScan – Premium GitHub Secret & API Key Scanner</title>
+  <meta name="description" content="A professional, client-side GitHub repository and local file secret scanner. Detect API keys, AWS keys, tokens, databases, and passwords securely in your browser.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Background Ambient Gradients -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Header / Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="shield-alert" class="icon-shield"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">SentryScan</span>
+          <span class="brand-badge">v1.0.0</span>
+        </div>
+      </div>
+      <nav class="header-nav">
+        <a href="#about" class="nav-link">
+          <i data-lucide="info" class="nav-icon"></i> How It Works
+        </a>
+        <a href="#rules" class="nav-link">
+          <i data-lucide="key-round" class="nav-icon"></i> Scanning Rules
+        </a>
+        <a href="https://github.com/jaiakash2403-anonymous/github-secret-scanner" target="_blank" class="nav-btn-github" id="headerGithubLink">
+          <i data-lucide="github" class="btn-icon"></i> GitHub Repo
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1 class="hero-title">Secure Your Code Before the <span class="text-gradient">Leaks Happen</span></h1>
+      <p class="hero-subtitle">
+        Scan public and private GitHub repositories, or local directories instantly. Identifies API keys, private tokens, database URLs, and credentials. 
+        <strong class="security-toast"><i data-lucide="lock" class="inline-icon"></i> 100% Client-Side: Your code never leaves your browser.</strong>
+      </p>
+    </section>
+
+    <!-- Scanner Config Section -->
+    <section class="scanner-card main-panel" id="inputSection">
+      <!-- Mode Tabs -->
+      <div class="tabs-header">
+        <button class="tab-btn active" id="tabGithubBtn" onclick="switchTab('github')">
+          <i data-lucide="github"></i> Scan GitHub Repository
+        </button>
+        <button class="tab-btn" id="tabLocalBtn" onclick="switchTab('local')">
+          <i data-lucide="folder-search"></i> Scan Local Code
+        </button>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="tab-body">
+        
+        <!-- GitHub Scanner Tab -->
+        <div class="tab-content active" id="githubTabContent">
+          <div class="input-group">
+            <label for="repoUrl" class="field-label">Repository URL</label>
+            <div class="input-wrapper">
+              <i data-lucide="link" class="input-prefix"></i>
+              <input type="url" id="repoUrl" class="text-input" placeholder="https://github.com/owner/repository" value="">
+              <button class="btn-primary" id="btnStartGithubScan" onclick="startGithubScan()">
+                <span>Scan Repository</span> <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+            <p class="field-help">Supports main, master, or any custom branch in standard URL formats.</p>
+          </div>
+
+          <!-- Advanced Toggle -->
+          <div class="advanced-settings-accordion">
+            <button class="accordion-trigger" onclick="toggleAdvancedSettings()">
+              <span class="trigger-label"><i data-lucide="settings"></i> Advanced Settings (GitHub Token)</span>
+              <i data-lucide="chevron-down" class="chevron-icon" id="advancedChevron"></i>
+            </button>
+            <div class="accordion-content" id="advancedSettingsContent">
+              <div class="field-box">
+                <label for="githubToken" class="field-label">
+                  GitHub Personal Access Token (PAT)
+                  <span class="tooltip-container">
+                    <i data-lucide="help-circle" class="icon-help"></i>
+                    <span class="tooltip-text">Required for private repositories or to avoid GitHub API rate limits (60/hr unauthenticated vs 5,000/hr authenticated). Stored only locally in your browser.</span>
+                  </span>
+                </label>
+                <div class="input-wrapper">
+                  <i data-lucide="key" class="input-prefix"></i>
+                  <input type="password" id="githubToken" class="text-input" placeholder="ghp_xxxxxxxxxxxxxxxx or github_pat_xxxx">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Local Scanner Tab -->
+        <div class="tab-content" id="localTabContent">
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-content">
+              <div class="upload-icon-container">
+                <i data-lucide="upload-cloud" class="icon-upload"></i>
+              </div>
+              <h3 class="drop-title">Drag & Drop files or folder here</h3>
+              <p class="drop-subtitle">Select files or scan an entire folder structure locally</p>
+              
+              <div class="upload-actions">
+                <label class="btn-secondary file-input-label">
+                  <i data-lucide="file-code"></i> Choose Files
+                  <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelection(event)">
+                </label>
+                <label class="btn-secondary folder-input-label">
+                  <i data-lucide="folder"></i> Choose Folder
+                  <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;" onchange="handleFolderSelection(event)">
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Scanning / Progress State Screen (Hidden initially) -->
+    <section class="scanner-card main-panel scanning-panel hidden" id="scanningSection">
+      <div class="scanning-layout">
+        
+        <!-- Radar Graphic -->
+        <div class="scanning-graphic-box">
+          <div class="radar-circle">
+            <div class="radar-sweep"></div>
+            <div class="radar-center-shield">
+              <i data-lucide="shield" class="radar-shield-icon"></i>
+            </div>
+            <div class="ping ping-1"></div>
+            <div class="ping ping-2"></div>
+          </div>
+        </div>
+
+        <!-- Progress Details -->
+        <div class="scanning-info">
+          <h2 class="scanning-title" id="scanTitle">Analyzing Repository...</h2>
+          <p class="scanning-status" id="scanStatusText">Connecting to GitHub REST API...</p>
+
+          <!-- Progress Bar -->
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+          </div>
+
+          <!-- Counter Stats Grid -->
+          <div class="stats-counter-grid">
+            <div class="counter-card">
+              <div class="counter-val" id="countFilesScanned">0</div>
+              <div class="counter-label"><i data-lucide="file"></i> Files Scanned</div>
+            </div>
+            <div class="counter-card alert-card">
+              <div class="counter-val" id="countSecretsFound">0</div>
+              <div class="counter-label"><i data-lucide="alert-triangle"></i> Secrets Found</div>
+            </div>
+            <div class="counter-card">
+              <div class="counter-val" id="countTimeElapsed">0.0s</div>
+              <div class="counter-label"><i data-lucide="clock"></i> Time Elapsed</div>
+            </div>
+            <div class="counter-card">
+              <div class="counter-val" id="countScanSpeed">0 f/s</div>
+              <div class="counter-label"><i data-lucide="zap"></i> Scanning Speed</div>
+            </div>
+          </div>
+
+          <div class="scanning-actions">
+            <button class="btn-cancel" onclick="cancelScan()"><i data-lucide="x-circle"></i> Cancel Scan</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time File Logging Feed -->
+      <div class="log-console">
+        <div class="console-header">
+          <span><i data-lucide="terminal"></i> Activity Log</span>
+          <span class="pulse-indicator"></span>
+        </div>
+        <div class="console-body" id="consoleBody">
+          <div class="log-line system-log">Engine initialized. Ready to scan...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Section (Hidden initially) -->
+    <section class="results-container hidden" id="resultsSection">
+      
+      <!-- Scan Completion Banner -->
+      <div class="completion-banner" id="completionBanner">
+        <div class="banner-icon-box" id="bannerIconBox">
+          <!-- Filled dynamically -->
+        </div>
+        <div class="banner-text-box">
+          <h2 class="banner-title" id="bannerTitle">Scan Completed</h2>
+          <p class="banner-subtitle" id="bannerSubtitle">No sensitive credentials detected in this code repository.</p>
+        </div>
+        <div class="banner-action-box">
+          <button class="btn-primary" onclick="resetToScanner()"><i data-lucide="refresh-cw"></i> New Scan</button>
+          <button class="btn-secondary" onclick="exportReportJSON()"><i data-lucide="download"></i> Export JSON</button>
+          <button class="btn-secondary" onclick="window.print()"><i data-lucide="printer"></i> Print PDF</button>
+        </div>
+      </div>
+
+      <!-- Summary & Chart Grid -->
+      <div class="results-dashboard-grid" id="resultsDashboardGrid">
+        
+        <!-- Summary Cards -->
+        <div class="dashboard-sidebar">
+          
+          <div class="severity-summary-card">
+            <h3 class="panel-section-title">Threat Assessment</h3>
+            <div class="severity-bars">
+              <div class="severity-bar-item high-severity">
+                <div class="bar-header">
+                  <span>Critical & High Severity</span>
+                  <span class="bar-count" id="countHighSeverity">0</span>
+                </div>
+                <div class="bar-progress-bg">
+                  <div class="bar-progress-fill" id="fillHighSeverity" style="width: 0%;"></div>
+                </div>
+                <span class="severity-details">AWS keys, private tokens, DB connection URLs</span>
+              </div>
+
+              <div class="severity-bar-item medium-severity">
+                <div class="bar-header">
+                  <span>Medium Severity</span>
+                  <span class="bar-count" id="countMediumSeverity">0</span>
+                </div>
+                <div class="bar-progress-bg">
+                  <div class="bar-progress-fill" id="fillMediumSeverity" style="width: 0%;"></div>
+                </div>
+                <span class="severity-details">API keys, OAuth client tokens</span>
+              </div>
+
+              <div class="severity-bar-item low-severity">
+                <div class="bar-header">
+                  <span>Low Severity / Warnings</span>
+                  <span class="bar-count" id="countLowSeverity">0</span>
+                </div>
+                <div class="bar-progress-bg">
+                  <div class="bar-progress-fill" id="fillLowSeverity" style="width: 0%;"></div>
+                </div>
+                <span class="severity-details">General configurations, passwords in comments</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Chart Widget -->
+          <div class="chart-card">
+            <h3 class="panel-section-title">Secrets Breakdown</h3>
+            <div class="chart-box">
+              <svg class="svg-pie-chart" viewBox="0 0 200 200" id="secretsPieChart">
+                <!-- Doughnut Chart Rendered Dynamically -->
+                <circle cx="100" cy="100" r="70" class="chart-bg" />
+                <circle cx="100" cy="100" r="70" class="chart-segment" id="chartHighSegment" />
+                <circle cx="100" cy="100" r="70" class="chart-segment" id="chartMediumSegment" />
+                <circle cx="100" cy="100" r="70" class="chart-segment" id="chartLowSegment" />
+                <!-- Hole in the middle for Doughnut effect -->
+                <circle cx="100" cy="100" r="45" class="chart-hole" />
+                <text x="100" y="95" class="chart-total-count" id="chartTotalCount">0</text>
+                <text x="100" y="120" class="chart-total-lbl">SECRETS</text>
+              </svg>
+            </div>
+            
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color high"></span> High</span>
+              <span class="legend-item"><span class="legend-color medium"></span> Med</span>
+              <span class="legend-item"><span class="legend-color low"></span> Low</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Secrets List View -->
+        <div class="dashboard-main">
+          <div class="list-controls">
+            <h3 class="panel-section-title">Detected Vulnerabilities (<span id="totalVulnerabilitiesCount">0</span>)</h3>
+            <div class="filter-wrapper">
+              <select id="severityFilter" class="filter-select" onchange="filterResults()">
+                <option value="all">All Severities</option>
+                <option value="high">High & Critical</option>
+                <option value="medium">Medium Only</option>
+                <option value="low">Low Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="secrets-list" id="secretsListContainer">
+            <!-- Populated dynamically by app.js -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Explanatory & Feature Sections -->
+    <section class="info-section grid-2" id="about">
+      <div class="info-card">
+        <div class="info-card-header">
+          <i data-lucide="shield-check" class="info-icon"></i>
+          <h3>Enterprise-Grade Client-Side Security</h3>
+        </div>
+        <p>
+          Unlike other secret scanning services, SentryScan runs completely in your browser. All file processing, regex pattern evaluation, and token detection are executed locally. Your code is never transmitted to our servers or stored externally, offering maximum privacy and compliance for enterprise operations.
+        </p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-header">
+          <i data-lucide="gauge" class="info-icon"></i>
+          <h3>High-Performance Scanning Engine</h3>
+        </div>
+        <p>
+          Using highly optimized JavaScript regular expressions and parallel fetch mechanisms, SentryScan analyzes hundreds of files in seconds. The UI dynamically tracks statistics such as speed, scans, and threats, providing immediate visual warnings when leaks are found.
+        </p>
+      </div>
+    </section>
+
+    <section class="rules-section" id="rules">
+      <h3 class="section-title">Supported Credentials & Identification Signatures</h3>
+      <div class="rules-grid">
+        <div class="rule-badge"><i data-lucide="key" class="badge-icon purple"></i> AWS Keypairs</div>
+        <div class="rule-badge"><i data-lucide="globe" class="badge-icon blue"></i> Google Cloud / Firebase API Keys</div>
+        <div class="rule-badge"><i data-lucide="github" class="badge-icon black"></i> GitHub OAuth & Personal Access Tokens</div>
+        <div class="rule-badge"><i data-lucide="credit-card" class="badge-icon green"></i> Stripe Secret & Publishable Keys</div>
+        <div class="rule-badge"><i data-lucide="database" class="badge-icon red"></i> Database Connection Strings</div>
+        <div class="rule-badge"><i data-lucide="message-square" class="badge-icon orange"></i> Slack Webhook Integration Links</div>
+        <div class="rule-badge"><i data-lucide="file-key-2" class="badge-icon yellow"></i> SSH Private Keys & Certs</div>
+        <div class="rule-badge"><i data-lucide="lock" class="badge-icon teal"></i> JWT & OAuth Tokens</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Remediation Sidebar (Slide out Drawer) -->
+  <div class="remediation-drawer-overlay hidden" id="drawerOverlay" onclick="closeRemediationDrawer()">
+    <div class="remediation-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <h3 class="drawer-title"><i data-lucide="life-buoy"></i> Remediation Plan</h3>
+        <button class="btn-close-drawer" onclick="closeRemediationDrawer()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer-body" id="remediationDrawerBody">
+        <!-- Filled dynamically based on selected secret type -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p class="footer-text">&copy; 2026 SentryScan. Built for developers. Professional light theme layout.</p>
+      <div class="footer-links">
+        <a href="#about">Security Policy</a>
+        <span class="footer-dot">&middot;</span>
+        <a href="#rules">Scanning Logic</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
